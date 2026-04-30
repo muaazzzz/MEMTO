@@ -293,7 +293,7 @@ class Solver(object):
 
         combined_energy = np.concatenate([train_energy, valid_energy], axis=0)
 
-        thresh = np.percentile(combined_energy, 100 - self.anormly_ratio)
+        thresh = np.percentile(combined_energy, 100 * (1 - self.anormly_ratio))
         print("Threshold :", thresh)
 
 

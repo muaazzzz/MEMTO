@@ -44,7 +44,7 @@ def k_means_clustering(x,n_mem,d_model):
     # sckit-learn xxxx (cuda problem)
     device = x.device if x.is_cuda else torch.device('cpu')
     try:
-        _, cluster_centers = kmeans(X=x_normalized, num_clusters=n_mem, distance='euclidean', device=device, n_init=10)
+        _, cluster_centers = kmeans(X=x_normalized, num_clusters=n_mem, distance='euclidean', device=device)
         # Denormalize cluster centers back to original space
         cluster_centers = cluster_centers * x_std + x_mean
     except Exception as e:
