@@ -1,4 +1,5 @@
 from __future__ import absolute_import, print_function
+import os
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
@@ -31,9 +32,13 @@ class MemoryModule(nn.Module):
                 # self.mem = self.memory_init_embedding
                 # after
                 load_path = f'./memory_item/{dataset_name}_memory_item.pth'
-                self.mem = torch.load(load_path)
-                print(load_path)
-                print('loading memory item vectors trained from kmeans (for test phase)')
+                if os.path.exists(load_path):
+                    self.mem = torch.load(load_path)
+                    print(load_path)
+                    print('loading memory item vectors trained from kmeans (for test phase)')
+                else:
+                    print(f'{load_path} not found, using random initialization for test phase')
+                    self.mem = F.normalize(torch.rand((self.n_memory, self.fea_dim), dtype=torch.float), dim=1)
 
             else:
                 # first train

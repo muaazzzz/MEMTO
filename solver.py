@@ -240,9 +240,17 @@ class Solver(object):
         return memory_item_embedding
     
     def test(self):
-        self.model.load_state_dict(
-            torch.load(
-                os.path.join(str(self.model_save_path), str(self.dataset) + '_checkpoint_second_train.pth')))
+        checkpoint_candidates = [
+            os.path.join(str(self.model_save_path), str(self.dataset) + '_checkpoint_second_train.pth'),
+            os.path.join(str(self.model_save_path), str(self.dataset) + '_checkpoint_first_train.pth'),
+        ]
+        checkpoint_path = next((path for path in checkpoint_candidates if os.path.exists(path)), None)
+        if checkpoint_path is None:
+            raise FileNotFoundError(
+                f'No checkpoint found in {self.model_save_path}. Run train and memory_initial before test, or at least train to create the first-phase checkpoint.'
+            )
+        print(f'Loading checkpoint: {checkpoint_path}')
+        self.model.load_state_dict(torch.load(checkpoint_path))
         self.model.eval()
         
         print("======================TEST MODE======================")

@@ -20,6 +20,11 @@ def main(config):
     cudnn.benchmark = True
     if config.data_path == './data/SMD/SMD/' and os.path.isdir('./dataset'):
         config.data_path = './dataset'
+    if config.phase_type is None:
+        if config.mode == 'test':
+            config.phase_type = 'test'
+        elif config.mode == 'memory_initial':
+            config.phase_type = 'second_train'
     if (not os.path.exists(config.model_save_path)):
         mkdir(config.model_save_path)
     solver = Solver(vars(config))
