@@ -42,7 +42,7 @@ def main(config):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--lr', type=float, default=0)
+    parser.add_argument('--lr', type=float, default=0.0001)
     parser.add_argument('--num_epochs', type=int, default=10)
     parser.add_argument('--k', type=int, default=5)
     parser.add_argument('--win_size', type=int, default=100)

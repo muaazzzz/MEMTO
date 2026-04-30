@@ -46,7 +46,7 @@ def k_means_clustering(x,n_mem,d_model):
     try:
         _, cluster_centers = kmeans(X=x_normalized, num_clusters=n_mem, distance='euclidean', device=device)
         # Denormalize cluster centers back to original space
-        cluster_centers = cluster_centers * x_std + x_mean
+        cluster_centers = (cluster_centers * x_std + x_mean).to(x.device)
     except Exception as e:
         print(f'K-means failed with error: {e}. Using random initialization instead.')
         cluster_centers = F.normalize(torch.rand((n_mem, d_model), dtype=torch.float), dim=1).to(x.device)
