@@ -12,6 +12,32 @@ from sklearn.preprocessing import StandardScaler
 import pickle
 
 
+def _resolve_data_file(data_path, filename):
+    base_path = os.path.abspath(data_path)
+    search_roots = []
+    current_path = base_path
+
+    while True:
+        if current_path not in search_roots:
+            search_roots.append(current_path)
+        parent_path = os.path.dirname(current_path)
+        if parent_path == current_path:
+            break
+        current_path = parent_path
+
+    for root in search_roots:
+        if not os.path.isdir(root):
+            continue
+        direct_path = os.path.join(root, filename)
+        if os.path.isfile(direct_path):
+            return direct_path
+        for walk_root, _, files in os.walk(root):
+            if filename in files:
+                return os.path.join(walk_root, filename)
+
+    raise FileNotFoundError(f'Could not find {filename} under {data_path}')
+
+
 class SWaTSegLoader(Dataset):
     def __init__(self, data_path, win_size, step, mode="train"):
         self.mode = mode
@@ -125,14 +151,14 @@ class MSLSegLoader(Dataset):
         self.step = step
         self.win_size = win_size
         self.scaler = StandardScaler()
-        data = np.load(data_path + "/MSL_train.npy")
+        data = np.load(_resolve_data_file(data_path, "MSL_train.npy"))
         self.scaler.fit(data)
         data = self.scaler.transform(data)
-        test_data = np.load(data_path + "/MSL_test.npy")
+        test_data = np.load(_resolve_data_file(data_path, "MSL_test.npy"))
         self.test = self.scaler.transform(test_data)
 
         self.train = data
-        self.test_labels = np.load(data_path + "/MSL_test_label.npy")
+        self.test_labels = np.load(_resolve_data_file(data_path, "MSL_test_label.npy"))
         print("test:", self.test.shape)
         print("train:", self.train.shape)
 
@@ -161,14 +187,14 @@ class SMAPSegLoader(Dataset):
         self.step = step
         self.win_size = win_size
         self.scaler = StandardScaler()
-        data = np.load(data_path + "/SMAP_train.npy")
+        data = np.load(_resolve_data_file(data_path, "SMAP_train.npy"))
         self.scaler.fit(data)
         data = self.scaler.transform(data)
-        test_data = np.load(data_path + "/SMAP_test.npy")
+        test_data = np.load(_resolve_data_file(data_path, "SMAP_test.npy"))
         self.test = self.scaler.transform(test_data)
 
         self.train = data
-        self.test_labels = np.load(data_path + "/SMAP_test_label.npy")
+        self.test_labels = np.load(_resolve_data_file(data_path, "SMAP_test_label.npy"))
         print("test:", self.test.shape)
         print("train:", self.train.shape)
 
@@ -197,14 +223,14 @@ class SMDSegLoader(Dataset):
         self.step = step
         self.win_size = win_size
         self.scaler = StandardScaler()
-        data = np.load(data_path + "/SMD_train.npy")
+        data = np.load(_resolve_data_file(data_path, "SMD_train.npy"))
         self.scaler.fit(data)
         data = self.scaler.transform(data)
-        test_data = np.load(data_path + "/SMD_test.npy")
+        test_data = np.load(_resolve_data_file(data_path, "SMD_test.npy"))
         self.test = self.scaler.transform(test_data)
         self.train = data
         data_len = len(self.train)
-        self.test_labels = np.load(data_path + "/SMD_test_label.npy")
+        self.test_labels = np.load(_resolve_data_file(data_path, "SMD_test_label.npy"))
         print("test:", self.test.shape)
         print("train:", self.train.shape)
         

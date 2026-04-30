@@ -14,8 +14,6 @@ import logging
 from sklearn.metrics import precision_recall_fscore_support
 from sklearn.metrics import accuracy_score
 
-os.environ["CUDA_VISIBLE_DEVICES"] = '0, 1, 2, 3'
-
 def adjust_learning_rate(optimizer, epoch, lr_):
     lr_adjust = {epoch: lr_ * (0.5 ** ((epoch - 1) // 1))}
     if epoch in lr_adjust.keys():
@@ -114,11 +112,8 @@ class Solver(object):
                                               dataset=self.dataset)
         self.thre_loader = self.vali_loader
         
-        if self.memory_initial == "False":
-            
-            self.memory_initial = False
-        else:
-            self.memory_initial = True
+        if isinstance(self.memory_initial, str):
+            self.memory_initial = self.memory_initial.lower() in ('true', '1', 'yes', 'y')
 
 
         self.memory_init_embedding = None
@@ -127,7 +122,7 @@ class Solver(object):
         self.build_model(memory_init_embedding=self.memory_init_embedding)
         
 
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device(self.device if torch.cuda.is_available() and 'cuda' in str(self.device) else "cpu")
         
         self.entropy_loss = EntropyLoss()
         self.criterion = nn.MSELoss()
@@ -150,8 +145,10 @@ class Solver(object):
                                     memory_initial=self.memory_initial, memory_init_embedding=memory_init_embedding, phase_type=self.phase_type, dataset_name=self.dataset)
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.lr)
 
-        if torch.cuda.is_available():
-            self.model = torch.nn.DataParallel(self.model, device_ids=[0,1,2,3], output_device=0).to(self.device)
+        if torch.cuda.is_available() and torch.cuda.device_count() > 1:
+            self.model = torch.nn.DataParallel(self.model).to(self.device)
+        else:
+            self.model = self.model.to(self.device)
 
     def vali(self, vali_loader):
         self.model.eval()
@@ -197,7 +194,7 @@ class Solver(object):
                 self.optimizer.zero_grad()
                 iter_count += 1
                 input = input_data.float().to(self.device)    
-                output_dict = self.model(input_data)
+                output_dict = self.model(input)
                 
                 output, memory_item_embedding, queries, mem_items, attn = output_dict['out'], output_dict['memory_item_embedding'], output_dict['queries'], output_dict["mem"], output_dict['attn']
 
@@ -215,11 +212,7 @@ class Solver(object):
                     print('\tspeed: {:.4f}s/iter; left time: {:.4f}s'.format(speed, left_time))
                     iter_count = 0
                     time_now = time.time()
-                try:
-                    loss.mean().backward()
-                    
-                except:
-                    import pdb; pdb.set_trace()
+                loss.mean().backward()
                 self.optimizer.step()
 
             print("Epoch: {} cost time: {}".format(epoch + 1, time.time() - epoch_time))
@@ -261,7 +254,7 @@ class Solver(object):
         train_attens_energy = []
         for i, (input_data, labels) in enumerate(self.train_loader):
             input = input_data.float().to(self.device)
-            output_dict = self.model(input_data)
+            output_dict = self.model(input)
             output, queries, mem_items = output_dict['out'], output_dict['queries'], output_dict['mem']
 
             rec_loss = torch.mean(criterion(input,output),dim=-1)

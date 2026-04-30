@@ -8,8 +8,8 @@ from kmeans_pytorch import kmeans
 import time
 
 def to_var(x, volatile=False):
-    if torch.cuda.is_available():
-        x = x.cuda()
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    x = x.to(device)
     return Variable(x, volatile=volatile)
 
 
@@ -23,7 +23,8 @@ def k_means_clustering(x,n_mem,d_model):
     x = x.view([-1,d_model])
     print('running K Means Clustering. It takes few minutes to find clusters')
     # sckit-learn xxxx (cuda problem)
-    _, cluster_centers = kmeans(X=x, num_clusters=n_mem, distance='euclidean', device=torch.device('cuda:0'))
+    device = x.device if x.is_cuda else torch.device('cpu')
+    _, cluster_centers = kmeans(X=x, num_clusters=n_mem, distance='euclidean', device=device)
     print("time for conducting Kmeans Clustering :", time.time() - start)
     print('K means clustering is done!!!')
 

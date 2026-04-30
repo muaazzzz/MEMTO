@@ -13,11 +13,13 @@ from solver import Solver
 
 
 def str2bool(v):
-    return v.lower() in ('true')
+    return str(v).lower() in ('true', '1', 'yes', 'y')
 
 
 def main(config):
     cudnn.benchmark = True
+    if config.data_path == './data/SMD/SMD/' and os.path.isdir('./dataset'):
+        config.data_path = './dataset'
     if (not os.path.exists(config.model_save_path)):
         mkdir(config.model_save_path)
     solver = Solver(vars(config))
@@ -55,7 +57,7 @@ if __name__ == '__main__':
     parser.add_argument('--num_workers', type=int, default=4*torch.cuda.device_count())
     parser.add_argument('--d_model', type=int, default=512)
     parser.add_argument('--temperature', type=int, default=0.1)
-    parser.add_argument('--memory_initial',type=str, default=False, help='whether it requires memory item embeddings. False: using random initialization, True: using customized intialization')
+    parser.add_argument('--memory_initial',type=str2bool, default=False, help='whether it requires memory item embeddings. False: using random initialization, True: using customized intialization')
     parser.add_argument('--phase_type',type=str, default=None, help='whether it requires memory item embeddings. False: using random initialization, True: using customized intialization')
 
     config = parser.parse_args()
